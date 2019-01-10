@@ -1,6 +1,12 @@
 class Api::DocumentsController < ApplicationController
   require 'libreconv'
 
+  def show
+    File.open('storage/output.pdf') do |f|
+      send_data f.read, type: 'application/pdf'
+    end
+  end
+
   def create
     replacement_text = params[:text]
 
@@ -10,16 +16,19 @@ class Api::DocumentsController < ApplicationController
 
     end
 
-    # if File.exists?('storage/output.odf') do
-    #   File.Delete('storage/output.odf')
-    # end
+    if File.exists?('storage/output.odt')
+      File.delete('storage/output.odt')
+      File.delete('storage/output.pdf')
+    end
 
     test_template.generate('storage/output.odt')
     Libreconv.convert('storage/output.odt', 'storage/output.pdf', '/Applications/LibreOffice.app/Contents/MacOS/soffice')
 
-    send_data test_template.generate,
-              type: 'application/vnd.oasis.opendocument.text',
-              disposition: 'attachment',
-              filename: 'test_template.odt'
+    # send_file 'storage/output.pdf'
+    #           type: 'application/pdf',
+    #           disposition: 'attachment',
+    #           filename: 'test_pdf.pdf'
+
+    head 200 and return
   end
 end
